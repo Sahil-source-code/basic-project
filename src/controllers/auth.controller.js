@@ -1,4 +1,6 @@
+const express=require('express')
 const usermodel = require('../models/user.model');
+const bcrypt=require('bcryptjs')
 const authrouter=express.Router()
 const crypto=require('crypto')
 const jwt=require('jsonwebtoken')
@@ -17,7 +19,7 @@ async function registercontroller(req,res){
             message:"user already exist"+ isuserexist==email?"email exist":"username exist"
         })
     }
-    const hash=crypto.createHash('sha256').update(password).digest('hex')
+    const hash=await bcrypt.hash(password,10)
     const user=await usermodel.create({
         username,
         email,
@@ -70,8 +72,8 @@ async function logincontroller(req,res){
             message:"user not found"
         })
     }
-    const hash=crypto.createHash('sha256').update(password).digest('hex')
-    const ispasswordvalid = hash==user.password
+    
+    const ispasswordvalid = await bcrypt.compare(password,user.password)
     if(!ispasswordvalid){
         return res.status(401).json({
             message:"password invalid"
